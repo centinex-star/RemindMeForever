@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Lua 5.1 tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Lua 5.1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.1
+
+      - name: Compile every file
+        run: |
+          for f in *.lua tests/*.lua; do
+            luac5.1 -p "$f" || exit 1
+          done
+
+      - name: Logic tests
+        run: lua5.1 tests/run.lua
+
+      - name: UI smoke tests
+        run: lua5.1 tests/ui_smoke.lua
+
+  package:
+    name: Build distributable
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lua5.1 zip
+
+      - name: Build zip
+        run: ./build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RemindMeForever-zip
+          path: dist/*.zip
+          if-no-files-found: error
+
+  validate-toc:
+    name: Validate TOC
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: TOC declares Forever and every file exists
+        run: |
+          set -e
+          grep -q '^## Interface: 16001' RemindMeForever.toc \
+            || { echo "TOC must target interface 16001 (WoW Forever)"; exit 1; }
+          echo "Interface line OK"
+          # Every listed .lua must exist, and every .lua on disk must be listed.
+          listed=$(grep -vE '^\s*(#|$)' RemindMeForever.toc | grep '\.lua$' | tr -d '\r')
+          for f in $listed; do
+            test -f "$f" || { echo "TOC lists missing file: $f"; exit 1; }
+          done
+          for f in *.lua; do
+            echo "$listed" | grep -qx "$f" || { echo "File not in TOC: $f"; exit 1; }
+          done
+          echo "TOC file list is consistent"

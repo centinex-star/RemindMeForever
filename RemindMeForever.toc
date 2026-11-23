@@ -1,0 +1,19 @@
+## Interface: 16001
+## Title: RemindMeForever
+## Notes: Build reminders that fire when your character matches a condition.
+## Author: Andy (centinex-star)
+## Version: 0.1.0
+## SavedVariables: RMFDB
+## SavedVariablesPerCharacter: RMFCharDB
+## DefaultState: enabled
+## X-Website: https://github.com/centinex-star/RemindMeForever
+
+Core.lua
+Conditions.lua
+Schedule.lua
+Reminders.lua
+Widgets.lua
+MainWindow.lua
+Popup.lua
+Options.lua
+Commands.lua

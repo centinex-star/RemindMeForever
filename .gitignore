@@ -1,0 +1,8 @@
+# Compiled artefacts and build output
+dist/
+*.zip
+
+# Editor / OS noise
+.vscode/
+.idea/
+.DS_Store
